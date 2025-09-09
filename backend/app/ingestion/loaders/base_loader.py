@@ -1,13 +1,11 @@
 from abc import ABC, abstractmethod
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
+from langchain.schema import Document
 
 class BaseLoader(ABC):
 
-    def __init__(self):
-        pass
-
     @abstractmethod
-    def load(self, source: str, metadata: Optional[Dict[str, Any]]=None, **kwargs) -> Dict[str, Any]:
+    def load(self) -> List[Document]:
         pass
 
     def merge_metadata(self, old_metadata: Optional[Dict[str, Any]], new_metadata: Optional[Dict[str, Any]]) -> Dict[str, Any]:

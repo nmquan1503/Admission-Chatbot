@@ -2,57 +2,62 @@ import requests
 from bs4 import BeautifulSoup, Tag
 from .base_loader import BaseLoader
 import re
-from typing import List, Dict
+from typing import List, Dict, Any, Optional
+from langchain.schema import Document
 
 class WebLoader(BaseLoader):
-    
-    def load(self, source: str, metadata: dict=None, **kwargs):
-        main_tagnames = kwargs.get('main_tagnames', None)
-        main_classnames = kwargs.get('main_classnames', None)
-        title_tagnames = kwargs.get('title_tagnames', None)
-        title_classnames = kwargs.get('title_classnames', None)
-        pagination_bar_tagnames = kwargs.get('pagination_bar_tagnames', None)
-        pagination_bar_classnames = kwargs.get('pagination_bar_classnames', None)
-        article_title_tagnames = kwargs.get('article_title_tagnames', None)
-        article_title_classnames = kwargs.get('article_title_classnames', None)
 
+    def __init__(
+        self, 
+        url: str, 
+        metadata: Dict[str, Any],
+        **kwargs
+    ):
+        super().__init__()
+        self.url = url
+        self.metadata = metadata
+        self.main_tagnames = kwargs.get('main_tagnames', None)
+        self.main_classnames = kwargs.get('main_classnames', None)
+        self.title_tagnames = kwargs.get('title_tagnames', None)
+        self.title_classnames = kwargs.get('title_classnames', None)
+        self.pagination_bar_tagnames = kwargs.get('pagination_bar_tagnames', None)
+        self.pagination_bar_classnames = kwargs.get('pagination_bar_classnames', None)
+        self.article_title_tagnames = kwargs.get('article_title_tagnames', None)
+        self.article_title_classnames = kwargs.get('article_title_classnames', None)
+    
+    def load(self) -> List[Document]:
         try:
-            response = requests.get(source, timeout=5)
+            response = requests.get(self.url, timeout=5)
         except requests.exceptions.RequestException as e:
             print(e)
-            return {
-                'content': None, 
-                'metadata': None 
-            }
+            return []
         
         html = BeautifulSoup(response.text, 'html.parser')
         
-        if main_tagnames and main_classnames:
-            main = html.find(main_tagnames, class_=main_classnames)
+        if self.main_tagnames and self.main_classnames:
+            main = html.find(self.main_tagnames, class_=self.main_classnames)
         else:
             main = html.find('body')
         
-        if pagination_bar_tagnames and pagination_bar_classnames:
+        if self.pagination_bar_tagnames and self.pagination_bar_classnames:
             self.remove_pagination_bar(
                 main=main,
-                bar_tagnames=pagination_bar_tagnames,
-                bar_classnames=pagination_bar_classnames
+                bar_tagnames=self.pagination_bar_tagnames,
+                bar_classnames=self.pagination_bar_classnames
             )
         
-        if title_tagnames and title_classnames:
-            new_metadata = self.extract_metadata(
-                main=main,
-                title_tagnames=title_tagnames,
-                title_classnames=title_classnames
-            )
+        if self.title_tagnames and self.title_classnames:
+            title = main.find(self.title_tagnames, class_=self.title_classnames)
+            new_metadata = self.extract_metadata(title=title.get_text(strip=True, separator=' '))
+            title.decompose()
         else:
             new_metadata = None
         
-        if article_title_tagnames and article_title_classnames:
+        if self.article_title_tagnames and self.article_title_classnames:
             self.handle_articles(
                 main=main,
-                title_tagnames=article_title_tagnames,
-                title_classnames=article_title_classnames
+                title_tagnames=self.article_title_tagnames,
+                title_classnames=self.article_title_classnames
             )
         
         self.handle_a_tags(main=main)
@@ -69,42 +74,37 @@ class WebLoader(BaseLoader):
         content = re.sub(r'\n+', '\n', content)
 
         if new_metadata:
-            metadata = self.merge_metadata(metadata, new_metadata)
+            self.metadata = self.merge_metadata(self.metadata, new_metadata)
 
-        return {
-            'content': content,
-            'metadata': metadata
-        }
+        return [Document(
+            page_content=content,
+            metadata=self.metadata
+        )]
 
     def extract_metadata(
         self,
-        main: Tag,
-        title_tagnames: str | List[str],
-        title_classnames: str | List[str],
-    ) -> Dict:
-        title = main.find(title_tagnames, class_=title_classnames)
-
+        title: str,
+    ) -> Optional[Dict[str, Any]]:
         if not title:
             return None
         
-        text = title.get_text(separator=' ')
-        years = re.findall(r'20\d{2}', text)
-
-        if not years:
-            return None
-        
-        years = [int(year) for year in years]
-
-        return {
-            'years': years
+        metadata = {
+            'title': title
         }
+
+        years = re.findall(r'20\d{2}', title)
+        if not years:
+            return metadata
+        years = [int(year) for year in years]
+        metadata['years'] = years
         
+        return metadata
 
     def remove_pagination_bar(
         self,
         main: Tag,
-        bar_tagnames: str | List[str],
-        bar_classnames: str | List[str]
+        bar_tagnames: List[str],
+        bar_classnames: List[str]
     ) -> None:
         pagnination_bar = main.find(bar_tagnames, class_=bar_classnames)
         if pagnination_bar:
@@ -179,13 +179,17 @@ class WebLoader(BaseLoader):
     def handle_articles(
         self,
         main: Tag,
-        title_tagnames: str | List[str],
-        title_classnames: str | List[str]
+        title_tagnames: List[str],
+        title_classnames: List[str]
     ) -> None:
         article_tags = main.find_all('article')
         for article_tag in article_tags:
             title = article_tag.find(title_tagnames, class_=title_classnames)
+            if not title:
+                continue
             a_tag = title.find('a')
+            if not a_tag:
+                continue
             text = a_tag.get_text(strip=True, separator=' ')
             link = a_tag.get('href')
             if link:
