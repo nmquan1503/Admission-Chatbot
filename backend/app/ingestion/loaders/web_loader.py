@@ -10,7 +10,7 @@ class WebLoader(BaseLoader):
     def __init__(
         self, 
         url: str, 
-        metadata: Dict[str, Any],
+        metadata: Optional[Dict[str, Any]]=None,
         **kwargs
     ):
         super().__init__()
@@ -53,6 +53,8 @@ class WebLoader(BaseLoader):
         else:
             new_metadata = None
         
+        self.handle_iframes(main=main)
+
         if self.article_title_tagnames and self.article_title_classnames:
             self.handle_articles(
                 main=main,
@@ -198,6 +200,21 @@ class WebLoader(BaseLoader):
             p_tag.string = text
             article_tag.replace_with(p_tag)
     
+    def handle_iframes(
+        self,
+        main: Tag,    
+    ):
+        iframes = main.find_all('iframe')
+        for iframe in iframes:
+            src = iframe.get('src', '')
+            text = iframe.get_text(strip=True, separator=' - ')
+            if not src:
+                iframe.decompose()
+            else:
+                p_tag = Tag(name='p')
+                p_tag.string = f'Video ( {src} )'
+                iframe.replace_with(p_tag)
+
     def convert_to_p(
         self,
         main: Tag, 
