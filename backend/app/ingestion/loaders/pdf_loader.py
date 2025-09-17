@@ -38,7 +38,7 @@ class PDFLoader(BaseLoader):
                     'total_pages': total_pages
                 }
                 if year:
-                    metadata['year'] = year
+                    metadata['years'] = [year]
                 docs.append(Document(
                     page_content=text,
                     metadata=metadata
