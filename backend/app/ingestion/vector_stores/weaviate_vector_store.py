@@ -1,6 +1,6 @@
 from .base_vector_store import BaseVectorStore
 import weaviate
-from weaviate.classes.config import Property, DataType
+from weaviate.classes.config import Property, DataType, Configure
 from weaviate.classes.query import Filter
 from weaviate.classes.data import DataObject
 from langchain.schema import Document
@@ -28,6 +28,10 @@ class WeaviateVectorStore(BaseVectorStore):
                     Property(name='content', data_type=DataType.TEXT),
                     Property(name='years', data_type=DataType.INT_ARRAY),
                     Property(name='metadata', data_type=DataType.TEXT)
+                ],
+                vector_config=[
+                    Configure.Vectors.self_provided(name='content_vector'),
+                    Configure.Vectors.self_provided(name='heading_vector')
                 ]
             )
             self.collection = self.client.collections.get(self.collection_name)
@@ -42,7 +46,7 @@ class WeaviateVectorStore(BaseVectorStore):
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
         
-    def add_document(self, doc: Document, embedding: List[float]) -> None:
+    def add_document(self, doc: Document, embedding: Dict[str, List[float]]) -> None:
         probs={
             'content': doc.page_content,
             'years': doc.metadata.get('years', []),
@@ -54,7 +58,7 @@ class WeaviateVectorStore(BaseVectorStore):
             vector=embedding
         )
     
-    def add_documents(self, docs: List[Document], embeddings: List[List[float]]):
+    def add_documents(self, docs: List[Document], embeddings: List[Dict[List[float]]]):
         objects = []
         for doc, embedding in zip(docs, embeddings):
             metadata = doc.metadata
@@ -108,7 +112,8 @@ class WeaviateVectorStore(BaseVectorStore):
         response = self.collection.query.near_vector(
             near_vector=query_vector,
             limit=k,
-            filters=self.dict_to_filter(filter)
+            filters=self.dict_to_filter(filter),
+            target_vector=['content_vector', 'heading_vector']
         )
         objects = response.objects
         docs = []
@@ -171,7 +176,7 @@ class WeaviateVectorStore(BaseVectorStore):
                 elif operator == 'Like':
                     return prob.like(value)
                 elif operator == 'Contains':
-                    return prob.like(value)
+                    return prob.contains_any(value)
                 else:
                     return None
             else:
