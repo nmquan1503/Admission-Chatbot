@@ -7,15 +7,16 @@ from typing import List, Dict, Any, Union, Optional, Tuple
 import re
 
 class PDFLoader(BaseLoader):
-    def __init__(
-        self,
-        file_path: str
-    ):
-        super().__init__()
-        self.file_path = file_path
+    def __init__(self):
+        pass
     
-    def load(self) -> List[Document]:
-        with pdfplumber.open(self.file_path) as pdf:
+    def load(
+        self,
+        path: str,
+        metadata: Optional[Dict[str, Any]] = None,
+        **kwargs
+    ) -> List[Document]:
+        with pdfplumber.open(path) as pdf:
             year = None
             if pdf.metadata.get('CreationDate'):
                 year_str = pdf.metadata['CreationDate'][2:6]
@@ -32,11 +33,11 @@ class PDFLoader(BaseLoader):
                     prev_table_row=last_table_row, 
                     return_last_table_row=True
                 )
-                metadata = {
-                    'source': self.file_path,
+                metadata = self.merge_metadata(metadata, {
+                    'source': path,
                     'page_number': page_number + 1,
                     'total_pages': total_pages
-                }
+                })
                 if year:
                     metadata['years'] = [year]
                 docs.append(Document(

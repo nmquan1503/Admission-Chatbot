@@ -5,7 +5,11 @@ from langchain.schema import Document
 class BaseLoader(ABC):
 
     @abstractmethod
-    def load(self) -> List[Document]:
+    def load(self,
+        path: str, 
+        metadata: Optional[Dict[str, Any]]=None,
+        **kwargs
+    ) -> List[Document]:
         pass
 
     def merge_metadata(self, old_metadata: Optional[Dict[str, Any]], new_metadata: Optional[Dict[str, Any]]) -> Dict[str, Any]:

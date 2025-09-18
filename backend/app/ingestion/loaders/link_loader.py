@@ -3,23 +3,24 @@ import requests
 from bs4 import BeautifulSoup
 from collections import deque
 from .base_loader import BaseLoader
-from typing import List
+from typing import List, Dict, Any, Optional
 from langchain.schema import Document
 
 class LinkLoader(BaseLoader):
-    def __init__(
-        self,
-        file_path: str
-    ):
-        super().__init__()
-        self.file_path = file_path
+    def __init__(self):
+        pass
     
-    def load(self) -> List[Document]:
+    def load(
+        self,
+        path: str,
+        metadata: Optional[Dict[str, Any]] = None,
+        **kwargs
+    ) -> List[Document]:
         stack = deque()
         loaded = set()
         docs = []
 
-        with open(self.file_path, 'r', encoding='utf-8') as f:
+        with open(path, 'r', encoding='utf-8') as f:
             config = json.load(f)
             pending_links = config.get('pending', [])
             ignore_links = config.get('ignore', [])
@@ -30,15 +31,14 @@ class LinkLoader(BaseLoader):
             base_url = config.get('base', '')
             stack.extend([{
                 'link': link,
-                'categories': []
+                'headings': []
             } for link in pending_links])
             loaded.update(ignore_links)
 
         while stack:
             item = stack.pop()
             link = item['link']
-            print(link)
-            categories = item['categories']
+            headings = item['headings']
             if link in loaded:
                 continue
             loaded.add(link)
@@ -64,23 +64,23 @@ class LinkLoader(BaseLoader):
                 if title_tag:
                     title = title_tag.get_text(strip=True, separator=' ')
             
-            if categories and title == categories[-1]:
-                del categories[-1]
+            if headings and title == headings[-1]:
+                del headings[-1]
             
             docs.append(Document(
                 page_content=link,
                 metadata={
-                    'categories': categories
+                    'headings': headings
                 }
             ))
-            categories = categories + [title]
+            headings = headings + [title]
             a_tags = main.find_all('a')
             for a_tag in a_tags:
                 href = a_tag.get('href')
                 if href and href.startswith(base_url) and href not in loaded:
                     stack.append({
                         'link': href,
-                        'categories': categories
+                        'headings': headings
                     })
 
         return docs
