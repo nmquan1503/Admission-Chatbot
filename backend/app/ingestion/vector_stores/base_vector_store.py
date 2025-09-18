@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Optional, Dict
 from langchain.schema import Document
 
 class BaseVectorStore(ABC):
@@ -13,3 +13,7 @@ class BaseVectorStore(ABC):
             raise ValueError('docs and embeddings must have the same size.')
         for doc, embedding in zip(docs, embeddings):
             self.add_document(doc, embedding)
+    
+    @abstractmethod
+    def similarity_search(self, query_vector: List[float], k: int, filter: Optional[Dict]) -> List[Document]:
+        pass
