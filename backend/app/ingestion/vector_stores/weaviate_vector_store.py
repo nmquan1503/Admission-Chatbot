@@ -19,11 +19,9 @@ class WeaviateVectorStore(BaseVectorStore):
         self.client = weaviate.connect_to_local(host=host, port=port, grpc_port=grpc_port)
         self.collection_name = collection_name
 
-        try:
-            self.collection = self.client.collections.get(self.collection_name)
-        except weaviate.exceptions.UnexpectedStatusCodeError:
+        if not self.client.collections.exists(self.collection_name):
             self.client.collections.create(
-                name=self.class_name,
+                name=self.collection_name,
                 properties=[
                     Property(name='content', data_type=DataType.TEXT),
                     Property(name='years', data_type=DataType.INT_ARRAY),
@@ -34,7 +32,7 @@ class WeaviateVectorStore(BaseVectorStore):
                     Configure.Vectors.self_provided(name='heading_vector')
                 ]
             )
-            self.collection = self.client.collections.get(self.collection_name)
+        self.collection = self.client.collections.get(self.collection_name)
 
     def close(self):
         if self.client:
@@ -53,17 +51,20 @@ class WeaviateVectorStore(BaseVectorStore):
             'metadata': json.dumps(doc.metadata),
         }
 
+        embedding = {k: v for k, v in embedding.items() if v is not None}
+
         self.collection.data.insert(
             properties=probs,
             vector=embedding
         )
     
-    def add_documents(self, docs: List[Document], embeddings: List[Dict[List[float]]]):
+    def add_documents(self, docs: List[Document], embeddings: List[Dict[str, List[float]]]):
         objects = []
         for doc, embedding in zip(docs, embeddings):
             metadata = doc.metadata
             if not metadata:
                 metadata = {}
+            embedding = {k: v for k, v in embedding.items() if v is not None}
             obj = DataObject(
                 properties={
                     'content': doc.page_content,

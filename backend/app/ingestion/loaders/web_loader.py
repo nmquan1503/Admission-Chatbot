@@ -7,46 +7,43 @@ from langchain.schema import Document
 
 class WebLoader(BaseLoader):
 
-    def __init__(self):
-        pass
+    def __init__(self, config: Dict[str, Any]):
+        self.main_tagnames = config.get('main_tagnames', None)
+        self.main_classnames = config.get('main_classnames', None)
+        self.title_tagnames = config.get('title_tagnames', None)
+        self.title_classnames = config.get('title_classnames', None)
+        self.pagination_bar_tagnames = config.get('pagination_bar_tagnames', None)
+        self.pagination_bar_classnames = config.get('pagination_bar_classnames', None)
+        self.article_title_tagnames = config.get('article_title_tagnames', None)
+        self.article_title_classnames = config.get('article_title_classnames', None)
     
     def load(
         self,
         path: str,
         metadata: Optional[Dict[str, Any]] = None,
-        **kwargs
     ) -> List[Document]:
         try:
             response = requests.get(path, timeout=5)
         except requests.exceptions.RequestException as e:
             print(e)
             return []
-        
-        main_tagnames = kwargs.get('main_tagnames', None)
-        main_classnames = kwargs.get('main_classnames', None)
-        title_tagnames = kwargs.get('title_tagnames', None)
-        title_classnames = kwargs.get('title_classnames', None)
-        pagination_bar_tagnames = kwargs.get('pagination_bar_tagnames', None)
-        pagination_bar_classnames = kwargs.get('pagination_bar_classnames', None)
-        article_title_tagnames = kwargs.get('article_title_tagnames', None)
-        article_title_classnames = kwargs.get('article_title_classnames', None)
 
         html = BeautifulSoup(response.text, 'html.parser')
         
-        if main_tagnames and main_classnames:
-            main = html.find(main_tagnames, class_=main_classnames)
+        if self.main_tagnames and self.main_classnames:
+            main = html.find(self.main_tagnames, class_=self.main_classnames)
         else:
             main = html.find('body')
         
-        if pagination_bar_tagnames and pagination_bar_classnames:
+        if self.pagination_bar_tagnames and self.pagination_bar_classnames:
             self.remove_pagination_bar(
                 main=main,
-                bar_tagnames=pagination_bar_tagnames,
-                bar_classnames=pagination_bar_classnames
+                bar_tagnames=self.pagination_bar_tagnames,
+                bar_classnames=self.pagination_bar_classnames
             )
         
-        if title_tagnames and title_classnames:
-            title = main.find(title_tagnames, class_=title_classnames)
+        if self.title_tagnames and self.title_classnames:
+            title = main.find(self.title_tagnames, class_=self.title_classnames)
             new_metadata = self.extract_metadata(title=title.get_text(strip=True, separator=' '))
             title.decompose()
         else:
@@ -54,11 +51,11 @@ class WebLoader(BaseLoader):
         
         self.handle_iframes(main=main)
 
-        if article_title_tagnames and article_title_classnames:
+        if self.article_title_tagnames and self.article_title_classnames:
             self.handle_articles(
                 main=main,
-                title_tagnames=article_title_tagnames,
-                title_classnames=article_title_classnames
+                title_tagnames=self.article_title_tagnames,
+                title_classnames=self.article_title_classnames
             )
         
         self.handle_a_tags(main=main)
@@ -170,6 +167,7 @@ class WebLoader(BaseLoader):
             if href:
                 if href.endswith(('.jpg', '.png')):
                     a_tag.decompose()
+                    continue
                 else:
                     text += f' ({href})'
             span_tag = Tag(name='span')

@@ -14,7 +14,6 @@ class LinkLoader(BaseLoader):
         self,
         path: str,
         metadata: Optional[Dict[str, Any]] = None,
-        **kwargs
     ) -> List[Document]:
         stack = deque()
         loaded = set()

@@ -58,6 +58,8 @@ class HeadingSplitter(BaseSplitter):
             return None
         metadata = metadata.copy()
         headings = [heading for heading in headings if heading]
+        if 'headings' in metadata:
+            headings.extend(metadata['headings'])
         if headings:
             metadata['headings'] = headings
         else:

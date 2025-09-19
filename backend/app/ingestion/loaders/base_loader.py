@@ -8,7 +8,6 @@ class BaseLoader(ABC):
     def load(self,
         path: str, 
         metadata: Optional[Dict[str, Any]]=None,
-        **kwargs
     ) -> List[Document]:
         pass
 

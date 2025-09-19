@@ -11,5 +11,12 @@ class HuggingFaceEmbedder(BaseEmbedder):
     def embed(self, text: str) -> List[float]:
         return self.model.encode(text, normalize_embeddings=True, convert_to_numpy=True).tolist()
     
-    def embed_batch(self, texts: List[str]) -> List[List[float]]:
-        return self.model.encode(texts, normalize_embeddings=True, convert_to_numpy=True).tolist()
+    def embed_batch(self, texts: List[str], batch_size:int = 32) -> List[List[float]]:
+        embeddings = []
+        for i in range(0, len(texts), batch_size):
+            embeddings.extend(self.model.encode(
+                texts[i : i + batch_size], 
+                normalize_embeddings=True, 
+                convert_to_numpy=True
+            ).tolist())
+        return embeddings

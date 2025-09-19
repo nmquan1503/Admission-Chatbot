@@ -14,7 +14,6 @@ class PDFLoader(BaseLoader):
         self,
         path: str,
         metadata: Optional[Dict[str, Any]] = None,
-        **kwargs
     ) -> List[Document]:
         with pdfplumber.open(path) as pdf:
             year = None
