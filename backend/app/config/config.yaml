@@ -49,3 +49,12 @@ ingestion:
 
 retriever:
   k: 5
+  
+summary:
+  model_name: qwen/qwen3-4b:free
+
+answer:
+  model_name: qwen/qwen3-4b:free
+
+intent_classification:
+  model_name: qwen/qwen3-4b:free
