@@ -15,6 +15,8 @@ class PDFLoader(BaseLoader):
         path: str,
         metadata: Optional[Dict[str, Any]] = None,
     ) -> List[Document]:
+        print('-' * 50)
+        print(f'>> PDF Loader: {path}')
         with pdfplumber.open(path) as pdf:
             year = None
             if pdf.metadata.get('CreationDate'):

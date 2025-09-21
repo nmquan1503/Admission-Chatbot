@@ -22,6 +22,8 @@ class WebLoader(BaseLoader):
         path: str,
         metadata: Optional[Dict[str, Any]] = None,
     ) -> List[Document]:
+        print('-' * 50)
+        print(f'>> Web Loader: {path}')
         try:
             response = requests.get(path, timeout=5)
         except requests.exceptions.RequestException as e:
@@ -44,7 +46,10 @@ class WebLoader(BaseLoader):
         
         if self.title_tagnames and self.title_classnames:
             title = main.find(self.title_tagnames, class_=self.title_classnames)
-            new_metadata = self.extract_metadata(title=title.get_text(strip=True, separator=' '))
+            new_metadata = self.extract_metadata(
+                title=title.get_text(strip=True, separator=' '),
+                path=path
+            )
             title.decompose()
         else:
             new_metadata = None
@@ -82,12 +87,14 @@ class WebLoader(BaseLoader):
     def extract_metadata(
         self,
         title: str,
+        path: str
     ) -> Optional[Dict[str, Any]]:
         if not title:
             return None
         
         metadata = {
-            'title': title
+            'title': title,
+            'source': path
         }
 
         years = re.findall(r'20\d{2}', title)

@@ -3,25 +3,35 @@ from .splitters.base_splitter import BaseSplitter
 from .embedders.base_embedder import BaseEmbedder
 from .vector_stores.base_vector_store import BaseVectorStore
 from typing import List, Dict, Any
+from .loaders.link_loader import LinkLoader
+from .loaders.pdf_loader import PDFLoader
+from .loaders.web_loader import WebLoader
+from .embedders.hugging_face_embedder import HuggingFaceEmbedder
+from .vector_stores.weaviate_vector_store import WeaviateVectorStore
+from .splitters.heading_splitter import HeadingSplitter
+from .splitters.character_size_splitter import CharacterSizeSplitter
+from ..config import settings
 
 class IngestionPipeline:
-    def __init__(
-        self,
-        link_loader: BaseLoader,
-        web_loader: BaseLoader,
-        pdf_loader: BaseLoader,
-        heading_splitter: BaseSplitter,
-        character_size_splitter: BaseSplitter,
-        embedder: BaseEmbedder,
-        vector_store: BaseVectorStore,
-    ):
-        self.link_loader = link_loader
-        self.web_loader = web_loader
-        self.pdf_loader = pdf_loader
-        self.heading_splitter = heading_splitter
-        self.character_size_splitter = character_size_splitter
-        self.embedder = embedder
-        self.vector_store = vector_store
+    def __init__(self):
+        self.link_loader = LinkLoader()
+        self.web_loader = WebLoader(config=settings.WEB_LOADER_CONFIG)
+        self.pdf_loader = PDFLoader()
+        self.heading_splitter = HeadingSplitter()
+        self.character_size_splitter = CharacterSizeSplitter(
+            chunk_size=settings.CHARACTER_SPLITTER_CONFIG['chunk_size'],
+            chunk_overlap=settings.CHARACTER_SPLITTER_CONFIG['chunk_overlap']
+        )
+        self.embedder = HuggingFaceEmbedder(settings.HUGGING_FACE_EMBEDDER_CONFIG['model_name'])
+        self.vector_store = WeaviateVectorStore(
+            host=settings.WEAVIATE_CONFIG['host'],
+            port=settings.WEAVIATE_CONFIG['port'],
+            grpc_port=settings.WEAVIATE_CONFIG['grpc_port'],
+            collection_name=settings.WEAVIATE_CONFIG['collection_name']
+        )
+    
+    def close(self):
+        self.vector_store.close()
     
     def run(
         self,

@@ -1,6 +1,7 @@
 from .base_splitter import BaseSplitter
 from typing import List
 from langchain.schema import Document
+import copy
 
 class CharacterSizeSplitter(BaseSplitter):
     def __init__(self, chunk_size: int, chunk_overlap: int):
@@ -20,7 +21,7 @@ class CharacterSizeSplitter(BaseSplitter):
                     text = content[i : i + self.chunk_size]
                     new_docs.append(Document(
                         page_content=text,
-                        metadata=doc.metadata.copy()
+                        metadata=copy.deepcopy(doc.metadata)
                     ))
 
         total_chunks = len(new_docs)

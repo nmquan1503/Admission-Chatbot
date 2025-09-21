@@ -2,6 +2,7 @@ from .base_splitter import BaseSplitter
 from langchain.schema import Document
 from typing import List, Optional, Dict, Any
 import re
+import copy
 
 class HeadingSplitter(BaseSplitter):
     def __init__(self):
@@ -56,7 +57,7 @@ class HeadingSplitter(BaseSplitter):
         content = content.strip()
         if not content:
             return None
-        metadata = metadata.copy()
+        metadata = copy.deepcopy(metadata)
         headings = [heading for heading in headings if heading]
         if 'headings' in metadata:
             headings.extend(metadata['headings'])
