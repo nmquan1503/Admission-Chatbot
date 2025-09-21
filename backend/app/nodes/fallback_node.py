@@ -7,6 +7,11 @@ class FallbackNode(BaseNode):
         pass
 
     def run(self, state: ChatState) -> ChatState:
+        
+        print('')
+        print('>> Fallback')
+        print('')
+
         state['ai_response'] = """
             Rất tiếc, tôi chưa thể hiểu rõ câu hỏi của bạn. 
             Để được hỗ trợ chi tiết hơn, bạn có thể tham khảo các kênh chính thức của trường:
@@ -19,7 +24,5 @@ class FallbackNode(BaseNode):
 
             Hy vọng những thông tin này sẽ giúp bạn nhận được sự hỗ trợ nhanh chóng!
         """
-        print('-' * 50)
-        print('>> Fallback:')
-        print(state['ai_response'])
+
         return state

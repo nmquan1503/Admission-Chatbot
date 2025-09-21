@@ -34,16 +34,18 @@ class FAQAnswerNode(BaseNode):
         self.chain = self.prompt | self.llm
 
     def run(self, state: ChatState) -> ChatState:
-        state['ai_response'] = 'ok'
-        print('-' * 50)
-        print('>> FAQ Answer:')
-        print(state['ai_response'])
-        return state
+
+        print('')
+        print('>> FAQ Answer: ')
+
         response = self.chain.invoke({
             'info': state['retrieved_docs'],
             'summary': state['summary'],
             'user_input': state['user_input']
         }).content
-        
+
+        print(f' - AI response: {response}')
+        print('')
+
         state['ai_response'] = response
         return state

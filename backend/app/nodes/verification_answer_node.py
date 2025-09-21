@@ -32,14 +32,18 @@ class VerificationAnswerNode(BaseNode):
         self.chain = prompt | llm
 
     def run(self, state: ChatState) -> ChatState:
-        print('-' * 50)
+        
+        print('')
         print('>> Verification Answer:')
-        print(state['ai_response'])
-        return state
+
         response = self.chain.invoke({
             'info': state['retrieved_docs'],
             'summary': state['summary'],
             'user_input': state['user_input']
         }).content
+
+        print(f' - AI response: {response}')
+        print('')
+
         state['ai_response'] = response
         return state

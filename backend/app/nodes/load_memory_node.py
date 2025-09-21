@@ -7,19 +7,30 @@ class LoadMemoryNode(BaseNode):
         self.memory = memory
     
     def run(self, state: ChatState) -> ChatState:
-        current = self.memory.get_memory(state['session_id'])
-        messages = ''
-        for msg in current['buffer'].messages:
-            if msg.type == 'human':
-                messages += f'Người dùng: {msg.content}\n'
-            elif msg.type == 'ai':
-                messages += f'AI: {msg.content}\n'
-            else:
-                messages += f'{msg.type}: {msg.content}\n'
-        state['messages'] = messages
-        state['summary'] = current['summary']
-        print('-' * 50)
-        print('>> Load Memory:')
-        print(state['messages'])
-        print(f"Summary: {state['summary']}")
+
+        print('')
+        print('>> Load Memory: ')
+
+        history = self.memory.get_memory(state['session_id'])
+
+        if not history:
+            print('History is None')
+            print('')
+            return state
+        
+        state['messages'] = history['buffer'].messages
+        state['summary'] = history['summary']
+
+        # messages = ''
+        # for msg in history['buffer'].messages:
+        #     if msg.type == 'human':
+        #         messages += f'Người dùng: {msg.content}\n'
+        #     elif msg.type == 'ai':
+        #         messages += f'AI: {msg.content}\n'
+        #     else:
+        #         messages += f'{msg.type}: {msg.content}\n'
+        # print(f' - Messages:')
+        print(f'Summary: ${state['summary']}')
+        print('')
+        
         return state

@@ -30,20 +30,29 @@ class IntentClassificationNode(BaseNode):
         self.chain = self.prompt | self.llm
     
     def run(self, state: ChatState) -> ChatState:
+        
+        print('')
+        print('>> Intent classification: ')
+
         intent = self.chain.invoke({
             'summary': state['summary'],
             'user_input': state['user_input'],
             'intents_str': self.intents_str
         }).content.strip()
 
+        print(f' - Intent: {intent}')
+
         for type in QuestionType:
             if intent == type.value:
+                
                 state['question_type'] = type
+                print(f' - Type: {type.name}')
+                print('')
+                
                 return state
         
         state['question_type'] = QuestionType.UNKNOWN
+        print(' - Type: UNKNOWN')
+        print('')
 
-        print('-' * 50)
-        print('>> Intent classification: ')
-        print(intent)
         return state

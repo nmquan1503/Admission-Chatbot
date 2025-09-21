@@ -43,13 +43,21 @@ class Workflow(StateGraph):
         self.add_node('summary', self.summary_node.run)
         
         self.add_edge(START, 'load_memory')
-        self.add_edge('load_memory', 'doc_retriever')
+        self.add_edge(
+            'load_memory',
+            lambda state: 'messages' in state.keys(),
+            {
+                True: 'summary',
+                False: END
+            }
+        )
+        self.add_edge('summary', 'doc_retriever')
         self.add_conditional_edges(
             'doc_retriever',
-            self._should_proceed,
+            lambda state: bool(state['retrieved_docs']),
             {
-                'proceed': 'intent_classification',
-                'fallback': 'fallback'
+                True: 'intent_classification',
+                False: 'fallback'
             }
         )
         self.add_conditional_edges(
@@ -61,17 +69,10 @@ class Workflow(StateGraph):
                 'fallback': 'fallback'
             }
         )
-        self.add_edge('fallback', 'summary')
-        self.add_edge('faq_answer', 'summary')
-        self.add_edge('verification_answer', 'summary')
-        self.add_edge('summary', 'save_memory')
+        self.add_edge('fallback', 'save_memory')
+        self.add_edge('faq_answer', 'save_memory')
+        self.add_edge('verification_answer', 'save_memory')
         self.add_edge('save_memory', END)
-        print('ok')
-    
-    def _should_proceed(self, state: ChatState) -> Literal['proceed', 'fallback']:
-        if state['retrieved_docs']:
-            return 'proceed'
-        return 'fallback'
 
     def _choose_answer_node(self, state: ChatState) -> Literal['faq', 'verification', 'fallback']:
         type = state['question_type']

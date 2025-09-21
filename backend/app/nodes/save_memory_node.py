@@ -7,12 +7,16 @@ class SaveMemoryNode(BaseNode):
         self.memory = memory
 
     def run(self, state: ChatState) -> ChatState:
+
+        print('')
+        print('>> Save Memory')
+        print('')
+
         self.memory.save_memory(
             session_id=state['session_id'],
             user_input=state['user_input'],
             ai_response=state['ai_response'],
             summary=state['summary']
         )
-        print('-' * 50)
-        print('>> Save Memory')
+
         return state

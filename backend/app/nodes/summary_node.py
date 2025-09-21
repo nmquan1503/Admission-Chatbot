@@ -29,19 +29,32 @@ class SummaryNode(BaseNode):
         self.chain = self.prompt | self.llm
     
     def run(self, state: ChatState) -> ChatState:
-        print('-' * 50)
-        print('>> Summary')
-        return state
-        his = ''
-        for msg in state['messages']:
-            if msg.type == 'human':
-                his += f'Người dùng: {msg.content}\n'
-            elif msg.type == 'ai':
-                his += f'AI: {msg.content}\n'
-            else:
-                his += f'{msg.type}: {msg.content}\n'
-        summary = self.chain({
-            'chat_history': his
-        })
+
+        print('')
+        print('>> Summary: ')
+
+        his = state['summary']
+        messages = state['messages']
+        if len(messages) >= 2:
+            his += '\n'
+            for msg in messages[-2:]:
+                if msg.type == 'human':
+                    his += f'Người dùng: {msg.content}\n'
+                elif msg.type == 'ai':
+                    his += f'AI: {msg.content}\n'
+                else:
+                    his += f'{msg.type}: {msg.content}\n'
+            print(f' - Summary input: {his}')
+
+            summary = self.chain({
+                'chat_history': his
+            })
+
+            print(f' - Current summary: {summary}')
+        else:
+            summary = his
+            print('No messages')
+        
+        print('')
         state['summary'] = summary
         return state

@@ -7,38 +7,44 @@ class DocRetrieverNode(BaseNode):
         self.retriever = retriever
     
     def run(self, state: ChatState) -> ChatState:
+
+        print('')
+        print('>> Doc Retriever:')
+
         retriever_input = state['summary'] + '\n' + state['user_input']
+        print(f' - Retriever input: {retriever_input}')
+
         docs = self.retriever.invoke(retriever_input)
-        info = ''
+
+        retrieved_docs = ''
         for doc in docs:
             cur = ''
             metadata = doc.metadata
-            print(metadata)
             if 'years' in metadata:
                 years = metadata['years']
                 if years:
                     cur += 'Năm: ' + ', '.join(str(y) for y in years) + '\n'
-            # if 'source' in metadata:
-            #     source = metadata['source']
-            #     if source:
-            # #         cur += 'Nguồn: ' + source + '\n'
-            # if 'page_number' in metadata:
-            #     cur += 'Trang ' + metadata['page_number'] + '\n'
+            if 'source' in metadata:
+                source = metadata['source']
+                if source:
+                    cur += 'Nguồn: ' + str(source) + '\n'
+            if 'page_number' in metadata:
+                cur += 'Trang ' + str(metadata['page_number']) + '\n'
             if 'headings' in metadata:
                 headings = metadata['headings']
                 if headings:
                     cur += 'Phần: ' + ' > '.join(headings) + '\n'
-            # if 'title' in metadata:
-            #     title = metadata['title']
-            #     if title:
-            #         cur += 'Tiêu đề: ' + title + '\n'
+            if 'title' in metadata:
+                title = metadata['title']
+                if title:
+                    cur += 'Tiêu đề: ' + str(title) + '\n'
             cur += 'Nội dung: ' + doc.page_content + '\n'
 
-            info += cur + '\n'
+            retrieved_docs += cur + '\n'
             
-        state['retrieved_docs'] = info
-        print('-' * 50)
-        print('>> Document Retriever: ')
-        print(info)
-        print
+        print(f' - Retrieved documents: {retrieved_docs}')
+        print('')
+
+        state['retrieved_docs'] = retrieved_docs
+
         return state
