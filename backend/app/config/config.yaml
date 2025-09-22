@@ -33,13 +33,13 @@ embedders:
 
 vector_stores:
   weaviate:
-    host: localhost
+    host: weaviate
     port: 8080
     grpc_port: 50051
     collection_name: Document
 
 ingestion:
-  run: False
+  run: True
   pdf_paths:
     - data/raw/De-an-tuyen-sinh-DHQG-2023-QHI.pdf
     - data/raw/Signed.QHI_De-an-TS-DHCQ-nam-2024.pdf
