@@ -6,6 +6,7 @@ from typing import List, Dict, Any
 from .loaders.link_loader import LinkLoader
 from .loaders.pdf_loader import PDFLoader
 from .loaders.web_loader import WebLoader
+from .loaders.faq_loader import FAQLoader
 from .embedders.hugging_face_embedder import HuggingFaceEmbedder
 from .vector_stores.weaviate_vector_store import WeaviateVectorStore
 from .splitters.heading_splitter import HeadingSplitter
@@ -17,6 +18,7 @@ class IngestionPipeline:
         self.link_loader = LinkLoader()
         self.web_loader = WebLoader(config=settings.WEB_LOADER_CONFIG)
         self.pdf_loader = PDFLoader()
+        self.faq_loader = FAQLoader()
         self.heading_splitter = HeadingSplitter()
         self.character_size_splitter = CharacterSizeSplitter(
             chunk_size=settings.CHARACTER_SPLITTER_CONFIG['chunk_size'],
@@ -37,6 +39,7 @@ class IngestionPipeline:
         self,
         links_paths: List[str],
         pdf_paths: List[str],
+        faq_paths: List[str]
     ):
         docs = []
         for link_path in links_paths:
@@ -54,6 +57,10 @@ class IngestionPipeline:
             pdf_docs = self.heading_splitter.split(pdf_docs)
             pdf_docs = self.character_size_splitter.split(pdf_docs)
             docs.extend(pdf_docs)
+        for faq_path in faq_paths:
+            faq_docs = self.faq_loader.load(faq_path)
+            faq_docs = self.heading_splitter.split(faq_docs)
+            faq_docs = self.character_size_splitter.split(faq_docs)
         
         embeddings = []
         contents = [doc.page_content for doc in docs]
