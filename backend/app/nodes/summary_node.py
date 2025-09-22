@@ -48,7 +48,7 @@ class SummaryNode(BaseNode):
 
             summary = self.chain.invoke({
                 'chat_history': his
-            })
+            }).content
 
             print(f' - Current summary: {summary}')
         else:
