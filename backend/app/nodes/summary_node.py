@@ -46,7 +46,7 @@ class SummaryNode(BaseNode):
                     his += f'{msg.type}: {msg.content}\n'
             print(f' - Summary input: {his}')
 
-            summary = self.chain({
+            summary = self.chain.invoke({
                 'chat_history': his
             })
 

@@ -24,9 +24,10 @@ class VerificationAnswerNode(BaseNode):
                 Câu hỏi của người dùng:
                 {user_input}
 
-                Hãy xác nhận thông tin trên (Đúng / Sai / Không có đủ thông tin) và giải thích dựa trên dữ liệu tham khảo.
+                Hãy xác nhận thông tin mà người dùng vừa nói (Đúng / Sai / Không có đủ thông tin), và giải thích một cách dễ hiểu dựa trên dữ liệu tham khảo. 
+                Nói chuyện thân thiện, trực tiếp với người dùng, không dùng cách diễn đạt kiểu báo cáo hay gián tiếp.
 
-                Lưu ý: Không thêm thông tin ngoài dữ liệu tham khảo, chỉ giải thích dựa trên dữ liệu đó.
+                Lưu ý: Chỉ dựa trên dữ liệu tham khảo, không thêm thông tin ngoài.
             """
         )
         self.chain = prompt | llm

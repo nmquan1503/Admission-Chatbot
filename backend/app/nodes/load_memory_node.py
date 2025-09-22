@@ -30,7 +30,7 @@ class LoadMemoryNode(BaseNode):
         #     else:
         #         messages += f'{msg.type}: {msg.content}\n'
         # print(f' - Messages:')
-        print(f'Summary: ${state['summary']}')
+        print(f"Summary: {state['summary']}")
         print('')
         
         return state

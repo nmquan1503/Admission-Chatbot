@@ -18,7 +18,8 @@ class Chatbot:
         )
         self.retriever = Retriever(
             embedder=self.embedder,
-            vector_store=self.vector_store
+            vector_store=self.vector_store,
+            k=settings.RETRIEVER_CONFIG['k']
         )
         self.workflow = Workflow(
             retriever=self.retriever,

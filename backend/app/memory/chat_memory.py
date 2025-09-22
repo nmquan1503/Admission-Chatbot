@@ -1,8 +1,9 @@
 from langchain.memory.chat_message_histories.in_memory import ChatMessageHistory
-from typing import Dict, Optional, Any
+from typing import Dict, Optional, Any, Tuple
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from ..config import settings
+import threading
 
 def singleton(cls):
     instances = {}
@@ -16,23 +17,25 @@ def singleton(cls):
 class ChatMemory:
     def __init__(self):
         self.store : Dict[str, Dict[str, Any]] = {}
+        self._start_clean_schedule()
     
-    def create_memory(self) -> str:
+    def create_memory(self) -> Tuple[str, timedelta]:
         session_id = str(uuid.uuid4())
         while session_id in self.store.keys():
             session_id = str(uuid.uuid4())
+        expires = datetime.now(timezone.utc) + timedelta(seconds=settings.MEMORY_CONFIG['ttl'])
         self.store[session_id] = {
             'buffer': ChatMessageHistory(),
             'summary': '',
-            'expires_at': datetime.now() + timedelta(seconds=settings.MEMORY_CONFIG['ttl']) 
+            'expires_at': expires
         }
-        return session_id
+        return session_id, expires
 
     def get_memory(self, session_id: str) -> Optional[Dict[str, Any]]:
         if session_id not in self.store.keys():
             return None
         history = self.store[session_id]
-        if history['expires_at'] < datetime.now():
+        if history['expires_at'] < datetime.now(timezone.utc):
             self.delete_memory(session_id)
             return None
         return history
@@ -43,7 +46,7 @@ class ChatMemory:
         self.store[session_id]['buffer'].add_user_message(user_input)
         self.store[session_id]['buffer'].add_ai_message(ai_response)
         self.store[session_id]['summary'] = summary
-        self.store[session_id]['expires_at'] = datetime.now() + timedelta(seconds=settings.MEMORY_CONFIG['ttl'])
+        self.store[session_id]['expires_at'] = datetime.now(timezone.utc) + timedelta(seconds=settings.MEMORY_CONFIG['ttl'])
 
     def clear_memory(self, session_id: str):
         if session_id in self.store.keys():
@@ -57,7 +60,28 @@ class ChatMemory:
         expired_sessions = [
             session_id 
             for session_id, history in self.store.items()
-            if history['expires_at'] < datetime.now()
+            if history['expires_at'] < datetime.now(timezone.utc)
         ]
         for session_id in expired_sessions:
             self.delete_memory(session_id)
+    
+    def exists(self, session_id: str) -> bool:
+        if session_id not in self.store.keys():
+            return False
+        history = self.store[session_id]
+        if history['expires_at'] < datetime.now(timezone.utc):
+            return False
+        return True
+
+    def refresh(self, session_id: str) -> Optional[datetime]:
+        if session_id in self.store.keys():
+            self.store[session_id]['expires_at'] = datetime.now(timezone.utc) + timedelta(seconds=settings.MEMORY_CONFIG['ttl'])
+            return self.store[session_id]['expires_at']
+        
+    def _start_clean_schedule(self):
+        def run():
+            while True:
+                self.clean()
+                threading.Event().wait(3600)
+        t = threading.Thread(target=run, daemon=True)
+        t.start()

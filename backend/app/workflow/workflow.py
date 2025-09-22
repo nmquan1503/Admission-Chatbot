@@ -43,7 +43,7 @@ class Workflow(StateGraph):
         self.add_node('summary', self.summary_node.run)
         
         self.add_edge(START, 'load_memory')
-        self.add_edge(
+        self.add_conditional_edges(
             'load_memory',
             lambda state: 'messages' in state.keys(),
             {

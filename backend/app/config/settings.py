@@ -26,3 +26,7 @@ SUMMARY_MODEL_NAME = yaml_config['summary']['model_name']
 ANSWER_MODEL_NAME = yaml_config['answer']['model_name']
 
 INTENT_CLASSIFICATION_MODEL_NAME = yaml_config['intent_classification']['model_name']
+
+MEMORY_CONFIG = yaml_config['memory']
+
+RETRIEVER_CONFIG = yaml_config['retriever']

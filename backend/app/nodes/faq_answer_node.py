@@ -15,19 +15,21 @@ class FAQAnswerNode(BaseNode):
         self.prompt = ChatPromptTemplate.from_template(
             """
                 Bạn là trợ lý tuyển sinh của trường đại học Công Nghệ - Đại học Quốc gia Hà Nội.
-                
-                Thông tin tham khảo:
+
+                Thông tin tham khảo (vui lòng chỉ dùng thông tin này để trả lời):
                 {info}
-                
-                Tóm tắt hội thoại:
+
+                Tóm tắt hội thoại trước (nếu có):
                 {summary}
 
                 Câu hỏi của người dùng:
                 {user_input}
 
-                Hãy trả lời ngắn gọn, chính xác, chỉ dựa trên thông tin tham khảo. 
-                Nếu câu trả lời không có trong tài liệu, hãy trả lời: "Thông tin chưa có sẵn".
-                Không thêm thông tin ngoài tài liệu.
+                Quy tắc trả lời:
+                1. Dựa trên thông tin trong phần "Thông tin tham khảo", bạn có thể suy luận để trả lời nếu cần.
+                2. Không thêm bất kỳ thông tin nào ngoài tài liệu.
+                3. Nếu câu hỏi không thể trả lời dù suy luận từ tài liệu, hãy trả lời chính xác: "Thông tin chưa có sẵn".
+                4. Trả lời ngắn gọn, súc tích, dễ hiểu.
             """
         )
 

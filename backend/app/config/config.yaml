@@ -46,6 +46,8 @@ ingestion:
     - data/raw/Thong-tin-tuyen-sinh-DHCQ-nam-2025-QHI.pdf
   link_paths:
     - data/raw/links.json
+  faq_paths:
+    - data/raw/faq.json
 
 retriever:
   k: 5
@@ -54,7 +56,10 @@ summary:
   model_name: qwen/qwen3-4b:free
 
 answer:
-  model_name: qwen/qwen3-4b:free
+  model_name: qwen/qwen3-235b-a22b:free
 
 intent_classification:
-  model_name: qwen/qwen3-4b:free
+  model_name: qwen/qwen3-8b:free
+
+memory:
+  ttl: 900
