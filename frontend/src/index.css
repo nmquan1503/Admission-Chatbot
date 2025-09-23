@@ -25,3 +25,17 @@ textarea {
   scrollbar-width: thin;
   scrollbar-color: rgba(255,255,255,0.3) transparent;
 }
+
+div::-webkit-scrollbar {
+  width: 5px;
+  height: 3px;
+}
+
+div::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+div::-webkit-scrollbar-thumb {
+  background-color: yellow;
+  border-radius: 2px;
+}
