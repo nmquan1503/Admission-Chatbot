@@ -1,7 +1,17 @@
 import ChatWindow from "../components/ChatWindow"
 import background from '../assets/background.jpg';
+import { initSession } from "../services/SessionService";
+import { useEffect } from "react";
 
 export default function ChatPage() {
+
+    useEffect(() => {
+        const setupSession = async () => {
+            await initSession();
+        };
+        setupSession();
+    }, []);
+
     return (
         <div className="relative w-full h-screen overflow-hidden">
             <img 
