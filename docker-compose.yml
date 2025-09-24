@@ -21,6 +21,13 @@ services:
     volumes:
       - weaviate-data:/var/lib/weaviate
     restart: unless-stopped
+  
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
 
 volumes:
   weaviate-data:
