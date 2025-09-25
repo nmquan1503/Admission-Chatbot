@@ -11,6 +11,8 @@ from ..nodes.load_memory_node import LoadMemoryNode
 from ..nodes.summary_node import SummaryNode
 from ..nodes.verification_answer_node import VerificationAnswerNode
 from ..nodes.save_memory_node import SaveMemoryNode
+from ..nodes.input_preprocessing_node import InputPreprocessingNode
+from ..nodes.response_postprocessing_node import ResponsePostprocessingNode
 from ..memory.chat_memory import ChatMemory
 from ..retriever.retriever import Retriever
 from ..config import settings
@@ -32,6 +34,8 @@ class Workflow(StateGraph):
         self.intent_classification_node = IntentClassificationNode(model_name=settings.INTENT_CLASSIFICATION_MODEL_NAME)
         self.fallback_node = FallbackNode()
         self.summary_node = SummaryNode(model_name=settings.SUMMARY_MODEL_NAME)
+        self.input_preprocessing_node = InputPreprocessingNode()
+        self.response_postprocessing_node = ResponsePostprocessingNode()
 
         self.add_node('load_memory', self.load_memory_node.run)
         self.add_node('save_memory', self.save_memory_node.run)
@@ -41,8 +45,11 @@ class Workflow(StateGraph):
         self.add_node('intent_classification', self.intent_classification_node.run)
         self.add_node('fallback', self.fallback_node.run)
         self.add_node('summary', self.summary_node.run)
-        
-        self.add_edge(START, 'load_memory')
+        self.add_node('preprocessing', self.input_preprocessing_node.run)
+        self.add_node('postprocessing', self.response_postprocessing_node.run)
+
+        self.add_edge(START, 'preprocessing')
+        self.add_edge('preprocessing', 'load_memory')
         self.add_conditional_edges(
             'load_memory',
             lambda state: 'messages' in state.keys(),
@@ -70,8 +77,9 @@ class Workflow(StateGraph):
             }
         )
         self.add_edge('fallback', 'save_memory')
-        self.add_edge('faq_answer', 'save_memory')
-        self.add_edge('verification_answer', 'save_memory')
+        self.add_edge('faq_answer', 'postprocessing')
+        self.add_edge('verification_answer', 'postprocessing')
+        self.add_edge('postprocessing', 'save_memory')
         self.add_edge('save_memory', END)
 
     def _choose_answer_node(self, state: ChatState) -> Literal['faq', 'verification', 'fallback']:

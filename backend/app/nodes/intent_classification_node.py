@@ -17,14 +17,15 @@ class IntentClassificationNode(BaseNode):
         self.intents_str = ' hoặc '.join(intents)
 
         self.prompt = ChatPromptTemplate.from_template(
-            """
-                Tóm tắt hội thoại: {summary}
+            """\
+Tóm tắt hội thoại: {summary}
 
-                Câu hỏi của người dùng: {user_input}
+Câu hỏi của người dùng: {user_input}
 
-                Phân loại intent và trả lời chỉ 1 trong các lựa chọn sau đây: {intents_str}
-                
-                Không trả lời câu hỏi, chỉ trả về intent.
+Phân loại intent và trả lời chỉ 1 trong các lựa chọn sau đây: {intents_str}  
+Những câu hỏi không ghi rõ tên trường sẽ mặc định là hỏi về Trường Đại học Công Nghệ         
+Nếu câu hỏi không liên quan về Trường Đại học Công Nghệ hoặc liên quan tới trường khác, trả về unknown.
+Không trả lời câu hỏi, chỉ trả về intent.
             """
         )
         self.chain = self.prompt | self.llm

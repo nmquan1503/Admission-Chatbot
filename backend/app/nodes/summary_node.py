@@ -3,6 +3,7 @@ from langchain_openai import ChatOpenAI
 from ..config import settings
 from .base_node import BaseNode
 from ..workflow.state import ChatState
+import re
 
 class SummaryNode(BaseNode):
     def __init__(self, model_name: str):
@@ -13,17 +14,18 @@ class SummaryNode(BaseNode):
         )
 
         self.prompt = ChatPromptTemplate.from_template(
-            """
-                Bạn là trợ lý AI trong lĩnh vực tư vấn tuyển sinh. Nhiệm vụ của bạn là tóm tắt hội thoại giữa người dùng và AI.
+            """\
+Bạn là trợ lý AI trong lĩnh vực tư vấn tuyển sinh. Nhiệm vụ của bạn là tóm tắt hội thoại giữa người dùng và AI.
 
-                Hội thoại:
-                {chat_history}
+Hội thoại:
+{chat_history}
 
-                Yêu cầu tóm tắt:
-                - Giữ các ý chính của người dùng và phản hồi của AI.
-                - Tóm tắt ngắn gọn, 1–2 câu, bỏ các câu chào hỏi hoặc cảm ơn.
-                - Chỉ tóm tắt dựa trên hội thoại, không thêm thông tin mới.
-                - Xuất ra văn bản tự nhiên, dễ đọc.
+Yêu cầu tóm tắt:
+- Giữ các ý chính của người dùng và phản hồi của AI.
+- Các thông tin liên quan đến số liệu cần kiểm tra thật kĩ.
+- Tóm tắt ngắn gọn, 1–2 câu, bỏ các câu chào hỏi hoặc cảm ơn.
+- Chỉ tóm tắt dựa trên hội thoại, không thêm thông tin mới.
+- Xuất ra văn bản tự nhiên, dễ đọc.
             """
         )
         self.chain = self.prompt | self.llm
@@ -49,6 +51,9 @@ class SummaryNode(BaseNode):
             summary = self.chain.invoke({
                 'chat_history': his
             }).content
+
+            summary = re.sub(r'<think>.*?</think>', '', summary, flags=re.DOTALL)
+            summary = summary.strip()
 
             print(f' - Current summary: {summary}')
         else:
